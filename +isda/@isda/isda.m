@@ -10,6 +10,9 @@
 %   Supported property-value pairs include:
 %       Data                -A numerical vector with at least three
 %                            elements
+%       Quality             -A numerical or logical vector with the same
+%                            length of Data indicating the quality of data,
+%                            1 means good quality and 0 means gaps
 %       EmbedDimension      -A numerical scalar
 %       TimeDelay           -A numerical scalar
 %       Normalization       -A char array or string. Current supported
@@ -46,6 +49,7 @@ classdef (CaseInsensitiveProperties = true, TruncatedProperties = true) isda < h
     % main properties, open to user
     properties (Dependent = true, SetObservable = true, AbortSet = true)
         Data
+        Quality
         EmbedDimension
         TimeDelay
     end
@@ -76,6 +80,7 @@ classdef (CaseInsensitiveProperties = true, TruncatedProperties = true) isda < h
     % cache, shadowing the true properties
     properties (SetAccess = protected, Hidden = true)
         Data_
+        Quality_
         EmbedDimension_
         TimeDelay_
     end
@@ -119,6 +124,14 @@ classdef (CaseInsensitiveProperties = true, TruncatedProperties = true) isda < h
         
         function out = get.Data(this)
             out = this.Data_;
+        end
+        
+        function set.Quality(this, value)
+            this.Quality_ = value(:);
+        end
+        
+        function out = get.Quality(this)
+            out = this.Quality_;
         end
         
         function set.EmbedDimension(this, value)
@@ -225,6 +238,11 @@ classdef (CaseInsensitiveProperties = true, TruncatedProperties = true) isda < h
                 this = init(this, varargin{:});
             end
             
+            % parse quality
+            if isempty(this.Quality)
+                this.Quality = ones(size(this.Data));
+            end
+            
             try
                 isda.isdaManager.embedReconstruct(this);
                 isda.isdaManager.stDistance(this);
@@ -242,5 +260,7 @@ classdef (CaseInsensitiveProperties = true, TruncatedProperties = true) isda < h
         ha = plotDist(this, varargin);
         ha = plotPdf(this, varargin);
         en = robustEntropyRate(this, p0, varargin);
+        en = partialSampEn(this, varargin);
+        en = partialFuzzyEn(this, varargin);
     end
 end
