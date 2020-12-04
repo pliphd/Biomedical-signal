@@ -1,4 +1,11 @@
 classdef isdaManager
+    %ISDAMANAGER
+    % 
+    %   Copyright 2019- Peng Li
+    %
+    %   $Author: Peng Li
+    %   $Date:   Sep 04, 2019
+    % 
     methods (Static = true)
         function embedReconstruct(isdaObj, ~)
             if ~(~isempty(isdaObj.EmbedDimension) && ~isempty(isdaObj.TimeDelay) && ~isempty(isdaObj.Normalization))
@@ -18,6 +25,11 @@ classdef isdaManager
             N   = length(isdaObj.Data) - (isdaObj.EmbedDimension-1)*isdaObj.TimeDelay;
             ind = hankel(1:N, N:length(isdaObj.Data));
             isdaObj.StateSpace_ = ts(ind(:, 1:isdaObj.TimeDelay:end));
+            
+            % remove state related to gap points
+            qualityStateSpace   = isdaObj.Quality(ind(:, 1:isdaObj.TimeDelay:end));
+            gapStateIndicator   = any(~qualityStateSpace, 2);
+            isdaObj.StateSpace_(gapStateIndicator, :) = [];
         end
         
         function stDistance(isdaObj, ~)
@@ -41,7 +53,7 @@ classdef isdaManager
         % methods
         function lh = dataParameterChg(isdaObj)
             lh = addlistener(isdaObj, ...
-                {'Data', 'EmbedDimension', 'TimeDelay', 'Normalization'}, ...
+                {'Data', 'Quality', 'EmbedDimension', 'TimeDelay', 'Normalization'}, ...
                 'PostSet', ...
                 @(src, evt) isda.isdaManager.embedReconstruct(isdaObj));
         end
