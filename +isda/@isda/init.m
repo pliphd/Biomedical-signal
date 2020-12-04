@@ -35,6 +35,8 @@ for iP = pvStart:2:ni
             else
                 error('The Data property should be a numerical vector.');
             end
+        case 'quality'
+            this.Quality = value(:);
         case {'embeddimension', 'timedelay', 'workinterval', 'workradius'}
             if isnumeric(value) && isscalar(value)
                 this.(lower(char(varargin{iP}))) = value;
